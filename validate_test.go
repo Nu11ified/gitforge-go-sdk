@@ -22,21 +22,21 @@ func intPtr(v int) *int {
 func TestValidateWebhookSignature_Valid(t *testing.T) {
 	payload := `{"event":"push"}`
 	sig := sign(payload, "my-secret")
-	if !ValidateWebhookSignature(payload, "my-secret", sig) {
+	if !ValidateWebhookSignature(payload, sig, "my-secret") {
 		t.Fatal("expected valid signature")
 	}
 }
 
 func TestValidateWebhookSignature_TamperedPayload(t *testing.T) {
 	sig := sign(`{"event":"push"}`, "my-secret")
-	if ValidateWebhookSignature(`{"event":"hack"}`, "my-secret", sig) {
+	if ValidateWebhookSignature(`{"event":"hack"}`, sig, "my-secret") {
 		t.Fatal("expected invalid for tampered payload")
 	}
 }
 
 func TestValidateWebhookSignature_WrongSecret(t *testing.T) {
 	sig := sign(`{"event":"push"}`, "correct")
-	if ValidateWebhookSignature(`{"event":"push"}`, "wrong", sig) {
+	if ValidateWebhookSignature(`{"event":"push"}`, sig, "wrong") {
 		t.Fatal("expected invalid for wrong secret")
 	}
 }
@@ -45,7 +45,7 @@ func TestValidateWebhookSignature_MissingPrefix(t *testing.T) {
 	mac := hmac.New(sha256.New, []byte("my-secret"))
 	mac.Write([]byte(`{"event":"push"}`))
 	rawHex := hex.EncodeToString(mac.Sum(nil))
-	if ValidateWebhookSignature(`{"event":"push"}`, "my-secret", rawHex) {
+	if ValidateWebhookSignature(`{"event":"push"}`, rawHex, "my-secret") {
 		t.Fatal("expected invalid without sha256= prefix")
 	}
 }

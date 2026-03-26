@@ -18,7 +18,7 @@ type ValidateWebhookOptions struct {
 }
 
 // ValidateWebhookSignature verifies the HMAC-SHA256 signature.
-func ValidateWebhookSignature(payload, secret, signature string) bool {
+func ValidateWebhookSignature(payload, signature, secret string) bool {
 	if !strings.HasPrefix(signature, "sha256=") {
 		return false
 	}
@@ -32,7 +32,7 @@ func ValidateWebhookSignature(payload, secret, signature string) bool {
 
 // ValidateWebhook validates signature and optionally checks timestamp freshness.
 func ValidateWebhook(payload, secret, signature string, opts *ValidateWebhookOptions) bool {
-	if !ValidateWebhookSignature(payload, secret, signature) {
+	if !ValidateWebhookSignature(payload, signature, secret) {
 		return false
 	}
 
