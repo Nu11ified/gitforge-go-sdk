@@ -61,6 +61,39 @@ func (c *httpClient) del(ctx context.Context, path string, query url.Values) err
 	return err
 }
 
+func (c *httpClient) getRaw(ctx context.Context, path string, query url.Values) ([]byte, error) {
+	u := c.baseURL + path
+	if len(query) > 0 {
+		u += "?" + query.Encode()
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read body: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, c.parseError(resp.StatusCode, raw)
+	}
+
+	return raw, nil
+}
+
+func (c *httpClient) delWithBody(ctx context.Context, path string, body any) (json.RawMessage, error) {
+	return c.mutate(ctx, http.MethodDelete, path, body)
+}
+
 func (c *httpClient) mutate(ctx context.Context, method, path string, body any) (json.RawMessage, error) {
 	u := c.baseURL + path
 	var bodyReader io.Reader
