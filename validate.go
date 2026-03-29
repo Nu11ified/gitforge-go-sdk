@@ -13,11 +13,15 @@ import (
 
 // ValidateWebhookOptions configures webhook validation.
 type ValidateWebhookOptions struct {
-	Timestamp     string
-	MaxAgeSeconds *int // nil = default 300s, Ptr(0) = skip timestamp check, Ptr(N) = N seconds
+	// Timestamp is the value of X-GitForge-Timestamp header (unix seconds).
+	Timestamp string
+	// Tolerance is the maximum age in seconds. nil = default 300s, Ptr(0) = skip freshness check.
+	Tolerance *int
 }
 
 // ValidateWebhookSignature verifies the HMAC-SHA256 signature.
+// The payload parameter should be the full signed content (which may include
+// a "timestamp." prefix when replay protection is used).
 func ValidateWebhookSignature(payload, signature, secret string) bool {
 	if !strings.HasPrefix(signature, "sha256=") {
 		return false
@@ -31,8 +35,20 @@ func ValidateWebhookSignature(payload, signature, secret string) bool {
 }
 
 // ValidateWebhook validates signature and optionally checks timestamp freshness.
+//
+// When opts.Timestamp is set, the signature is verified over "timestamp.payload"
+// (Stripe-style replay protection). When empty, the signature is verified over
+// the raw payload only (backward compatibility with old deliveries).
 func ValidateWebhook(payload, secret, signature string, opts *ValidateWebhookOptions) bool {
-	if !ValidateWebhookSignature(payload, signature, secret) {
+	// Build the signed content the same way the server does.
+	signedPayload := payload
+	var timestamp string
+	if opts != nil && opts.Timestamp != "" {
+		timestamp = opts.Timestamp
+		signedPayload = timestamp + "." + payload
+	}
+
+	if !ValidateWebhookSignature(signedPayload, signature, secret) {
 		return false
 	}
 
@@ -40,18 +56,18 @@ func ValidateWebhook(payload, secret, signature string, opts *ValidateWebhookOpt
 		return true
 	}
 
-	maxAge := 300
-	if opts.MaxAgeSeconds != nil {
-		maxAge = *opts.MaxAgeSeconds
+	tolerance := 300
+	if opts.Tolerance != nil {
+		tolerance = *opts.Tolerance
 	}
 
-	if opts.Timestamp != "" && maxAge > 0 {
-		ts, err := strconv.ParseInt(opts.Timestamp, 10, 64)
+	if timestamp != "" && tolerance > 0 {
+		ts, err := strconv.ParseInt(timestamp, 10, 64)
 		if err != nil {
 			return false
 		}
 		now := time.Now().Unix()
-		if math.Abs(float64(now-ts)) > float64(maxAge) {
+		if math.Abs(float64(now-ts)) > float64(tolerance) {
 			return false
 		}
 	}

@@ -15,9 +15,15 @@ func sign(payload, secret string) string {
 	return "sha256=" + hex.EncodeToString(mac.Sum(nil))
 }
 
+func signWithTimestamp(timestamp, payload, secret string) string {
+	return sign(timestamp+"."+payload, secret)
+}
+
 func intPtr(v int) *int {
 	return &v
 }
+
+// ── ValidateWebhookSignature (low-level) ───────────────────────────────────
 
 func TestValidateWebhookSignature_Valid(t *testing.T) {
 	payload := `{"event":"push"}`
@@ -50,10 +56,12 @@ func TestValidateWebhookSignature_MissingPrefix(t *testing.T) {
 	}
 }
 
+// ── ValidateWebhook with timestamp (replay protection) ─────────────────────
+
 func TestValidateWebhook_WithTimestamp(t *testing.T) {
 	payload := `{"event":"push"}`
-	sig := sign(payload, "my-secret")
 	ts := fmt.Sprintf("%d", time.Now().Unix())
+	sig := signWithTimestamp(ts, payload, "my-secret")
 	if !ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: ts}) {
 		t.Fatal("expected valid with fresh timestamp (default 300s)")
 	}
@@ -61,19 +69,19 @@ func TestValidateWebhook_WithTimestamp(t *testing.T) {
 
 func TestValidateWebhook_ExpiredTimestamp(t *testing.T) {
 	payload := `{"event":"push"}`
-	sig := sign(payload, "my-secret")
 	ts := fmt.Sprintf("%d", time.Now().Unix()-600)
-	if ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: ts, MaxAgeSeconds: intPtr(300)}) {
+	sig := signWithTimestamp(ts, payload, "my-secret")
+	if ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: ts, Tolerance: intPtr(300)}) {
 		t.Fatal("expected invalid for expired timestamp")
 	}
 }
 
 func TestValidateWebhook_SkipTimestampWhenZero(t *testing.T) {
 	payload := `{"event":"push"}`
-	sig := sign(payload, "my-secret")
 	ts := fmt.Sprintf("%d", time.Now().Unix()-99999)
-	if !ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: ts, MaxAgeSeconds: intPtr(0)}) {
-		t.Fatal("expected valid when maxAge is Ptr(0)")
+	sig := signWithTimestamp(ts, payload, "my-secret")
+	if !ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: ts, Tolerance: intPtr(0)}) {
+		t.Fatal("expected valid when tolerance is Ptr(0)")
 	}
 }
 
@@ -81,6 +89,25 @@ func TestValidateWebhook_NoTimestamp(t *testing.T) {
 	payload := `{"event":"push"}`
 	sig := sign(payload, "my-secret")
 	if !ValidateWebhook(payload, "my-secret", sig, nil) {
-		t.Fatal("expected valid without timestamp")
+		t.Fatal("expected valid without timestamp (backward compat)")
+	}
+}
+
+func TestValidateWebhook_TimestampInSignature_TamperedTimestamp(t *testing.T) {
+	payload := `{"event":"push"}`
+	realTs := fmt.Sprintf("%d", time.Now().Unix())
+	sig := signWithTimestamp(realTs, payload, "my-secret")
+	// Attacker replays with a different timestamp — signature won't match
+	fakeTs := fmt.Sprintf("%d", time.Now().Unix()+1000)
+	if ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{Timestamp: fakeTs}) {
+		t.Fatal("expected invalid when timestamp is tampered")
+	}
+}
+
+func TestValidateWebhook_BackwardCompat_NoTimestamp_EmptyOpts(t *testing.T) {
+	payload := `{"event":"push"}`
+	sig := sign(payload, "my-secret")
+	if !ValidateWebhook(payload, "my-secret", sig, &ValidateWebhookOptions{}) {
+		t.Fatal("expected valid with empty opts (no timestamp, backward compat)")
 	}
 }
