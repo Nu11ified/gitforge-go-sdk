@@ -145,6 +145,15 @@ type RepoToken struct {
 	RemoteURL string `json:"remoteUrl"`
 }
 
+// SandboxUrl is the response from creating a sandbox URL.
+type SandboxUrl struct {
+	RemoteURL       string  `json:"remoteUrl"`
+	Token           string  `json:"token"`
+	ExpiresAt       string  `json:"expiresAt"`
+	Branch          string  `json:"branch"`
+	EphemeralBranch *string `json:"ephemeralBranch"`
+}
+
 // GitCredential represents a git credential.
 type GitCredential struct {
 	ID        string  `json:"id"`

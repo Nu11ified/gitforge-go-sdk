@@ -41,6 +41,7 @@ func (c *Client) Repo(repoID string) *RepoScope {
 		Credentials: &CredentialsResource{client: c.http, repoID: repoID},
 		Mirrors:     &MirrorsResource{client: c.http, repoID: repoID},
 		Webhooks:    &WebhooksResource{client: c.http, repoID: repoID},
+		Sandbox:     &SandboxResource{client: c.http, repoID: repoID},
 	}
 }
 
@@ -55,4 +56,5 @@ type RepoScope struct {
 	Credentials *CredentialsResource
 	Mirrors     *MirrorsResource
 	Webhooks    *WebhooksResource
+	Sandbox     *SandboxResource
 }
