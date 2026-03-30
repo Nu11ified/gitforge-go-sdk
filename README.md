@@ -107,14 +107,14 @@ if err != nil {
 
 ## Contributing
 
-This SDK is developed inside the [GitForge monorepo](https://github.com/Nu11ified/GitForge) at `sdks/go/` and published to this repo via git subtree.
+Contributions are welcome! Please open a pull request against this repository.
 
-To contribute:
+1. Fork this repo
+2. Make your changes
+3. Run tests: `go test ./...`
+4. Submit a PR
 
-1. Clone the monorepo: `git clone https://github.com/Nu11ified/GitForge.git`
-2. Make changes in `sdks/go/`
-3. Run tests: `cd sdks/go && go test ./...`
-4. Submit a PR to the monorepo
+Accepted changes are pulled into the main GitForge monorepo by the maintainers.
 
 ## License
 
