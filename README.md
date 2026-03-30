@@ -5,7 +5,7 @@ Go SDK for [GitForge](https://git-forge.dev) — Git infrastructure for develope
 ## Install
 
 ```bash
-go get github.com/gitforge/sdk-go
+go get github.com/Nu11ified/gitforge-go-sdk
 ```
 
 Requires Go 1.21+.
@@ -18,7 +18,7 @@ package main
 import (
     "context"
     "fmt"
-    gitforge "github.com/gitforge/sdk-go"
+    gitforge "github.com/Nu11ified/gitforge-go-sdk"
 )
 
 func main() {
@@ -81,7 +81,7 @@ func main() {
 ## Webhook Validation
 
 ```go
-import gitforge "github.com/gitforge/sdk-go"
+import gitforge "github.com/Nu11ified/gitforge-go-sdk"
 
 isValid := gitforge.ValidateWebhook(gitforge.ValidateOpts{
     Payload:   rawBody,
