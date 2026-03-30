@@ -164,3 +164,25 @@ func (c *CommitsResource) Create(opts *CreateCommitOptions) *CommitBuilder {
 		baseBranch:  opts.BaseBranch,
 	}
 }
+
+// CreateFromDiffOptions are options for creating a commit from a unified diff.
+type CreateFromDiffOptions struct {
+	TargetBranch    string   `json:"targetBranch"`
+	CommitMessage   string   `json:"commitMessage"`
+	Author          Identity `json:"author"`
+	Diff            string   `json:"diff"`
+	BaseBranch      *string  `json:"baseBranch,omitempty"`
+	ExpectedHeadSHA *string  `json:"expectedHeadSha,omitempty"`
+}
+
+func (c *CommitsResource) CreateFromDiff(ctx context.Context, opts *CreateFromDiffOptions) (*CommitResult, error) {
+	raw, err := c.client.post(ctx, fmt.Sprintf("/repos/%s/diff-commit", c.repoID), opts)
+	if err != nil {
+		return nil, err
+	}
+	var result CommitResult
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal commit result: %w", err)
+	}
+	return &result, nil
+}

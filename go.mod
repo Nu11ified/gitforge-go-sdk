@@ -1,3 +1,3 @@
-module github.com/gitforge/sdk-go
+module github.com/Nu11ified/gitforge-go-sdk
 
 go 1.21
