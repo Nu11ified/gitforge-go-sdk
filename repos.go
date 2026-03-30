@@ -295,3 +295,20 @@ func (r *ReposResource) GetRawFile(ctx context.Context, repoID, ref, path string
 	q.Set("path", path)
 	return r.client.getRaw(ctx, fmt.Sprintf("/repos/%s/raw/%s", repoID, ref), q)
 }
+
+// GetArchive downloads a repository archive (tarball or zip) at a given ref.
+// Format should be "tarball" or "zip". Paths is an optional list of path prefixes to include.
+func (r *ReposResource) GetArchive(ctx context.Context, repoID, ref, format string, paths []string) ([]byte, error) {
+	q := url.Values{}
+	if len(paths) > 0 {
+		joined := ""
+		for i, p := range paths {
+			if i > 0 {
+				joined += ","
+			}
+			joined += p
+		}
+		q.Set("paths", joined)
+	}
+	return r.client.getRaw(ctx, fmt.Sprintf("/repos/%s/archive/%s/%s", repoID, format, ref), q)
+}
