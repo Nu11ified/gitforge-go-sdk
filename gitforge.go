@@ -11,18 +11,22 @@ type ClientOptions struct {
 
 // Client is the GitForge API client.
 type Client struct {
-	Repos     *ReposResource
-	PatchSets *PatchSetsResource
-	http      *httpClient
+	Repos      *ReposResource
+	PatchSets  *PatchSetsResource
+	Changes    *ChangesService
+	Operations *OperationsService
+	http       *httpClient
 }
 
 // NewClient creates a new GitForge API client.
 func NewClient(opts ClientOptions) *Client {
 	h := newHTTPClient(opts.BaseURL, opts.Token, opts.HTTPClient)
 	return &Client{
-		Repos:     &ReposResource{client: h},
-		PatchSets: &PatchSetsResource{client: h},
-		http:      h,
+		Repos:      &ReposResource{client: h},
+		PatchSets:  &PatchSetsResource{client: h},
+		Changes:    &ChangesService{client: h},
+		Operations: &OperationsService{client: h},
+		http:       h,
 	}
 }
 
