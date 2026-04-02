@@ -15,6 +15,8 @@ type Client struct {
 	PatchSets  *PatchSetsResource
 	Changes    *ChangesService
 	Operations *OperationsService
+	Traverse   *TraverseResource
+	Edit       *EditResource
 	http       *httpClient
 }
 
@@ -26,6 +28,8 @@ func NewClient(opts ClientOptions) *Client {
 		PatchSets:  &PatchSetsResource{client: h},
 		Changes:    &ChangesService{client: h},
 		Operations: &OperationsService{client: h},
+		Traverse:   &TraverseResource{client: h},
+		Edit:       &EditResource{client: h},
 		http:       h,
 	}
 }
