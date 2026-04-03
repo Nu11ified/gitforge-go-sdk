@@ -17,6 +17,7 @@ type Client struct {
 	Operations *OperationsService
 	Traverse   *TraverseResource
 	Edit       *EditResource
+	Shell      *ShellResource
 	http       *httpClient
 }
 
@@ -30,6 +31,7 @@ func NewClient(opts ClientOptions) *Client {
 		Operations: &OperationsService{client: h},
 		Traverse:   &TraverseResource{client: h},
 		Edit:       &EditResource{client: h},
+		Shell:      &ShellResource{client: h},
 		http:       h,
 	}
 }
@@ -52,6 +54,7 @@ func (c *Client) Repo(repoID string) *RepoScope {
 		Mirrors:     &MirrorsResource{client: c.http, repoID: repoID},
 		Webhooks:    &WebhooksResource{client: c.http, repoID: repoID},
 		Sandbox:     &SandboxResource{client: c.http, repoID: repoID},
+		Shell:       &RepoShellResource{client: c.http, repoID: repoID},
 	}
 }
 
@@ -67,4 +70,5 @@ type RepoScope struct {
 	Mirrors     *MirrorsResource
 	Webhooks    *WebhooksResource
 	Sandbox     *SandboxResource
+	Shell       *RepoShellResource
 }
